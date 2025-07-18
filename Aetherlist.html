@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AetherList</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0d0f18;
+            background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.05) 1px, transparent 0);
+            background-size: 25px 25px;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes modal-in {
+            from { opacity: 0; transform: scale(0.95) translateY(20px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        @keyframes breathe {
+            0%, 100% { transform: scale(0.9); box-shadow: 0 0 15px rgba(79, 70, 229, 0.4); }
+            50% { transform: scale(1); box-shadow: 0 0 30px rgba(79, 70, 229, 0.7); }
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+        .modal-content {
+            animation: modal-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .main-container {
+            background: rgba(17, 24, 39, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 0 80px rgba(79, 70, 229, 0.15);
+        }
+        .task-item, .task-link-item {
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: background-color 0.3s, transform 0.2s;
+        }
+        .task-item:hover, .task-link-item:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+            transform: translateY(-2px);
+        }
+        .task-text-done {
+            text-decoration: line-through;
+            color: #6b7280;
+        }
+        .xp-bar-inner {
+            background: linear-gradient(90deg, #fde047, #fbbf24);
+            transition: width 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        .glowing-border-button {
+            position: relative;
+            z-index: 1;
+            overflow: hidden;
+        }
+        .glowing-border-button::before {
+            content: '';
+            position: absolute;
+            top: 0; right: 0; bottom: 0; left: 0;
+            z-index: -1;
+            margin: -1px;
+            border-radius: inherit;
+            background: linear-gradient(90deg, #818cf8, #c084fc, #f472b6);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .glowing-border-button:hover::before {
+            opacity: 1;
+        }
+        .breathing-circle {
+            width: 150px;
+            height: 150px;
+            background: radial-gradient(circle, #4f46e5, #312e81);
+            border-radius: 50%;
+            animation: breathe 6s ease-in-out infinite;
+        }
+        .task-link-item {
+            display: block;
+            position: relative;
+            overflow: hidden;
+            min-height: 120px;
+        }
+        .thumbnail-bg {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-size: cover;
+            background-position: center;
+            transition: transform 0.3s ease-out;
+        }
+        .task-link-item:hover .thumbnail-bg {
+            transform: scale(1.05);
+        }
+        .thumbnail-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(to top, rgba(13, 15, 24, 0.8), rgba(13, 15, 24, 0.4));
+        }
+    </style>
+</head>
+<body class="text-gray-200 flex items-center justify-center min-h-screen p-4">
+
+    <div id="welcome-screen" class="w-full max-w-3xl mx-auto main-container rounded-2xl p-8 fade-in">
+        <h1 class="text-3xl font-bold text-center text-white mb-4">Welcome to AetherList</h1>
+        <p class="text-center text-gray-400 mb-8">This isn't just a to-do list; it's your personal productivity partner.</p>
+        <div class="bg-black/20 p-6 rounded-lg max-h-[50vh] overflow-y-auto border border-white/10">
+            <h2 class="text-xl font-bold text-purple-400 mb-3">Features:</h2>
+            <ul class="space-y-4 text-gray-300">
+                <li><strong>Visual Tasks:</strong> Paste a link to automatically create a task with a thumbnail preview.</li>
+                <li><strong>Gamification:</strong> Level up by earning XP for completing tasks and using AI. Maintain daily streaks for bonus XP!</li>
+                <li><strong>The AI Assistant (✨ Ask AI):</strong> Your central command for all smart features.</li>
+                <li><strong>Productivity Reports:</strong> Get weekly summaries and AI-powered analysis of your performance.</li>
+            </ul>
+        </div>
+        <button id="start-app-btn" class="w-full mt-8 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-lg transition-all transform hover:scale-105 glowing-border-button">
+            Start Organizing Your Universe
+        </button>
+    </div>
+
+    <div id="main-app-screen" class="w-full max-w-2xl mx-auto main-container rounded-2xl hidden">
+        <div class="p-6 md:p-8">
+            <header class="text-center mb-8">
+                <h1 class="text-3xl md:text-4xl font-bold text-white tracking-tight">AetherList</h1>
+                <div id="gamification-stats" class="mt-6 text-left">
+                    <div class="flex justify-between items-center mb-2">
+                        <span id="level-display" class="font-bold text-lg text-yellow-400">Level 1</span>
+                        <span id="streak-display" class="font-semibold text-orange-400 flex items-center gap-1">🔥 0</span>
+                    </div>
+                    <div class="w-full bg-black/20 rounded-full h-2.5 border border-white/10"><div id="xp-bar" class="xp-bar-inner h-full rounded-full" style="width: 0%"></div></div>
+                    <div id="xp-display" class="text-right text-sm text-gray-400 mt-1">0 / 100 XP</div>
+                </div>
+            </header>
+
+            <form id="task-form" class="flex gap-3 mb-6">
+                <input type="text" id="task-input" placeholder="Add a new task or paste a link..." class="flex-grow bg-black/30 border border-white/10 rounded-lg px-4 py-3 text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+                <button type="submit" id="add-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-6 py-3 rounded-lg transition-all transform hover:scale-105">Add</button>
+            </form>
+
+            <div id="task-list-container" class="space-y-2 max-h-[40vh] overflow-y-auto pr-2"></div>
+            
+            <div id="empty-state" class="text-center py-10 px-4 border-2 border-dashed border-white/10 rounded-lg mt-8 hidden">
+                 <svg class="mx-auto h-12 w-12 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                <h3 class="mt-2 text-lg font-medium text-gray-400">All tasks completed!</h3>
+                <p class="mt-1 text-sm text-gray-500">Add a new task to get started.</p>
+            </div>
+
+            <div id="central-ai-container" class="mt-8 flex justify-center gap-4">
+                 <button id="ask-ai-btn" class="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold px-8 py-4 rounded-lg transition-all transform hover:scale-105 shadow-lg shadow-purple-500/20">Ask AI ✨</button>
+                 <button id="view-report-btn" class="w-full sm:w-auto bg-white/5 hover:bg-white/10 text-white font-semibold px-6 py-3 rounded-lg border border-white/10 transition-all transform hover:scale-105">View Report</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="loading-modal" class="modal-backdrop fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center hidden z-50 opacity-0 transition-opacity duration-300"><div class="text-center"><div class="loader"></div><p class="text-white mt-4 text-lg">AI is thinking...</p></div></div>
+    <div id="ai-result-modal" class="modal-backdrop fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center hidden z-50 opacity-0 p-4 transition-opacity duration-300"><div class="modal-content main-container rounded-xl w-full max-w-md p-6 text-center"><h3 id="ai-modal-title" class="text-xl font-bold text-white mb-4"></h3><p id="ai-modal-content" class="text-gray-300 mb-6 text-left"></p><button id="close-ai-modal-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-6 py-2 rounded-lg">Close</button></div></div>
+    <div id="level-up-modal" class="modal-backdrop fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center hidden z-50 opacity-0 p-4 transition-opacity duration-300"><div class="modal-content main-container rounded-xl w-full max-w-md p-6 text-center border-yellow-400/50"><h3 class="text-2xl font-bold text-yellow-400 mb-4">🎉 LEVEL UP! 🎉</h3><p id="level-up-content" class="text-gray-300 mb-6 text-lg"></p><button id="close-level-up-modal-btn" class="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold px-6 py-2 rounded-lg">Awesome!</button></div></div>
+    <div id="ai-menu-modal" class="modal-backdrop fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center hidden z-50 opacity-0 p-4 transition-opacity duration-300"><div class="modal-content main-container rounded-xl w-full max-w-lg p-6"><h3 class="text-xl font-bold text-white mb-6 text-center">AI Assistant</h3><div class="grid grid-cols-1 sm:grid-cols-2 gap-3"><button data-action="check-in" class="ai-menu-btn text-left w-full p-4 bg-black/20 hover:bg-white/10 rounded-lg transition-colors border border-white/10"><strong>Daily Check-in</strong><span class="block text-sm text-gray-400">Talk to your AI partner.</span></button><button data-action="capture-idea" class="ai-menu-btn text-left w-full p-4 bg-black/20 hover:bg-white/10 rounded-lg transition-colors border border-white/10"><strong>Capture an Idea</strong><span class="block text-sm text-gray-400">Turn a thought into a task.</span></button><button data-action="plan-goal" class="ai-menu-btn text-left w-full p-4 bg-black/20 hover:bg-white/10 rounded-lg transition-colors border border-white/10"><strong>Plan a New Goal</strong><span class="block text-sm text-gray-400">Break down a big ambition.</span></button><button data-action="build-routine" class="ai-menu-btn text-left w-full p-4 bg-black/20 hover:bg-white/10 rounded-lg transition-colors border border-white/10"><strong>Build a Routine</strong><span class="block text-sm text-gray-400">Generate a new habit.</span></button><button data-action="prioritize" class="ai-menu-btn text-left w-full p-4 bg-black/20 hover:bg-white/10 rounded-lg transition-colors border border-white/10"><strong>Prioritize My Tasks</strong><span class="block text-sm text-gray-400">Find your top 3.</span></button><button data-action="energy" class="ai-menu-btn text-left w-full p-4 bg-black/20 hover:bg-white/10 rounded-lg transition-colors border border-white/10"><strong>Suggest by Energy</strong><span class="block text-sm text-gray-400">Match task to your vibe.</span></button><button data-action="review" class="ai-menu-btn text-left w-full p-4 bg-black/20 hover:bg-white/10 rounded-lg transition-colors border border-white/10"><strong>Review My Progress</strong><span class="block text-sm text-gray-400">Celebrate your wins.</span></button><button data-action="decide" class="ai-menu-btn text-left w-full p-4 bg-black/20 hover:bg-white/10 rounded-lg transition-colors border border-white/10"><strong>Help Me Decide</strong><span class="block text-sm text-gray-400">Choose between two tasks.</span></button><button data-action="mindful" class="ai-menu-btn text-left w-full p-4 bg-black/20 hover:bg-white/10 rounded-lg transition-colors border border-white/10"><strong>Mindful Moment</strong><span class="block text-sm text-gray-400">Take a quick break.</span></button></div><button id="close-ai-menu-btn" class="mt-6 w-full bg-white/5 hover:bg-white/10 text-white font-semibold py-2 rounded-lg border border-white/10">Cancel</button></div></div>
+    <div id="report-modal" class="modal-backdrop fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center hidden z-50 opacity-0 p-4 transition-opacity duration-300"><div class="modal-content main-container rounded-xl w-full max-w-2xl p-6"><h3 class="text-2xl font-bold text-white mb-6 text-center">Your Productivity Report</h3><div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 text-center"><div class="bg-black/20 p-4 rounded-lg border border-white/10"><p class="text-sm text-gray-400">Tasks This Week</p><p id="report-tasks-week" class="text-2xl font-bold text-green-400">0</p></div><div class="bg-black/20 p-4 rounded-lg border border-white/10"><p class="text-sm text-gray-400">Longest Streak</p><p id="report-longest-streak" class="text-2xl font-bold text-orange-400">0 days</p></div><div class="bg-black/20 p-4 rounded-lg border border-white/10"><p class="text-sm text-gray-400">Total XP Gained</p><p id="report-total-xp" class="text-2xl font-bold text-yellow-400">0</p></div></div><div id="ai-report-container" class="bg-black/20 p-4 rounded-lg border border-white/10 min-h-[100px]"></div><div class="flex justify-end gap-3 mt-6"><button id="close-report-modal-btn" class="bg-white/5 hover:bg-white/10 px-4 py-2 rounded-lg border border-white/10">Close</button><button id="get-ai-analysis-btn" class="bg-teal-600 hover:bg-teal-700 px-4 py-2 rounded-lg">Get AI Analysis</button></div></div></div>
+    <div id="goal-planner-modal" class="modal-backdrop fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center hidden z-50 opacity-0 p-4 transition-opacity duration-300"><div class="modal-content main-container rounded-xl w-full max-w-md p-6"><h3 class="text-xl font-bold text-white mb-4">🎯 AI Goal Planner</h3><p class="text-gray-400 mb-4">Describe a large goal, and the AI will create a step-by-step plan for you.</p><textarea id="goal-input" class="w-full bg-black/30 border border-white/10 rounded-lg p-3 h-24 focus:ring-2 focus:ring-purple-500 focus:outline-none" placeholder="e.g., Launch a successful YouTube channel about cooking..."></textarea><div class="flex justify-end gap-3 mt-4"><button id="close-goal-modal-btn" class="bg-white/5 hover:bg-white/10 px-4 py-2 rounded-lg border border-white/10">Cancel</button><button id="submit-goal-btn" class="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg">Create Plan</button></div></div></div>
+    <div id="routine-builder-modal" class="modal-backdrop fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center hidden z-50 opacity-0 p-4 transition-opacity duration-300"><div class="modal-content main-container rounded-xl w-full max-w-md p-6"><h3 class="text-xl font-bold text-white mb-4">🛠️ AI Routine Builder</h3><p class="text-gray-400 mb-4">Describe the routine you want to build.</p><textarea id="routine-input" class="w-full bg-black/30 border border-white/10 rounded-lg p-3 h-24 focus:ring-2 focus:ring-pink-500 focus:outline-none" placeholder="e.g., A productive 30-minute morning routine..."></textarea><div class="flex justify-end gap-3 mt-4"><button id="close-routine-modal-btn" class="bg-white/5 hover:bg-white/10 px-4 py-2 rounded-lg border border-white/10">Cancel</button><button id="submit-routine-btn" class="bg-pink-600 hover:bg-pink-700 px-4 py-2 rounded-lg">Build Routine</button></div></div></div>
+    <div id="idea-converter-modal" class="modal-backdrop fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center hidden z-50 opacity-0 p-4 transition-opacity duration-300"><div class="modal-content main-container rounded-xl w-full max-w-md p-6"><h3 class="text-xl font-bold text-white mb-4">💡 Idea-to-Task Converter</h3><p class="text-gray-400 mb-4">Drop a random idea, and the AI will turn it into an actionable task.</p><textarea id="idea-input" class="w-full bg-black/30 border border-white/10 rounded-lg p-3 h-24 focus:ring-2 focus:ring-yellow-500 focus:outline-none" placeholder="e.g., a sci-fi story about time-traveling librarians..."></textarea><div class="flex justify-end gap-3 mt-4"><button id="close-idea-modal-btn" class="bg-white/5 hover:bg-white/10 px-4 py-2 rounded-lg border border-white/10">Cancel</button><button id="submit-idea-btn" class="bg-yellow-600 hover:bg-yellow-700 px-4 py-2 rounded-lg">Convert Idea</button></div></div></div>
+    <div id="decision-helper-modal" class="modal-backdrop fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center hidden z-50 opacity-0 p-4 transition-opacity duration-300"><div class="modal-content main-container rounded-xl w-full max-w-md p-6"><h3 class="text-xl font-bold text-white mb-4">🤔 AI Decision Helper</h3><p class="text-gray-400 mb-4">Stuck between two tasks? Let the AI help you choose.</p><input id="decision-task-1" class="w-full bg-black/30 border border-white/10 rounded-lg p-3 mb-3 focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="Task Option 1..."><input id="decision-task-2" class="w-full bg-black/30 border border-white/10 rounded-lg p-3 focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="Task Option 2..."><div class="flex justify-end gap-3 mt-4"><button id="close-decision-modal-btn" class="bg-white/5 hover:bg-white/10 px-4 py-2 rounded-lg border border-white/10">Cancel</button><button id="submit-decision-btn" class="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg">Help Me Decide</button></div></div></div>
+    <div id="mindful-moment-modal" class="modal-backdrop fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center hidden z-50 opacity-0 p-4 transition-opacity duration-300"><div class="modal-content main-container rounded-xl w-full max-w-md p-8 text-center"><h3 class="text-xl font-bold text-white mb-6">🧘 Mindful Moment</h3><div class="flex justify-center items-center mb-6"><div class="breathing-circle"><span id="breath-text" class="text-white font-bold text-lg">Breathe In...</span></div></div><button id="close-mindful-modal-btn" class="bg-sky-600 hover:bg-sky-700 text-white font-semibold px-6 py-2 rounded-lg">I'm Ready</button></div></div>
+    <div id="energy-modal" class="modal-backdrop fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center hidden z-50 opacity-0 p-4 transition-opacity duration-300"><div class="modal-content main-container rounded-xl w-full max-w-md p-6"><h3 class="text-xl font-bold text-white mb-6 text-center">How's your energy?</h3><div class="grid grid-cols-1 gap-3"><button data-energy="High" class="energy-btn text-left w-full p-4 bg-red-600/20 hover:bg-red-600/40 rounded-lg border border-white/10"><strong>High Energy 🚀</strong><span class="block text-sm text-red-200">Ready for a challenge.</span></button><button data-energy="Medium" class="energy-btn text-left w-full p-4 bg-yellow-600/20 hover:bg-yellow-600/40 rounded-lg border border-white/10"><strong>Medium Energy ⚡️</strong><span class="block text-sm text-yellow-200">Steady and focused.</span></button><button data-energy="Low" class="energy-btn text-left w-full p-4 bg-blue-600/20 hover:bg-blue-600/40 rounded-lg border border-white/10"><strong>Low Energy ☕️</strong><span class="block text-sm text-blue-200">Looking for something simple.</span></button></div></div></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const welcomeScreen = document.getElementById('welcome-screen');
+            const mainAppScreen = document.getElementById('main-app-screen');
+            const startAppBtn = document.getElementById('start-app-btn');
+            
+            const taskForm = document.getElementById('task-form');
+            const taskInput = document.getElementById('task-input');
+            const taskListContainer = document.getElementById('task-list-container');
+            const emptyState = document.getElementById('empty-state');
+            const askAiBtn = document.getElementById('ask-ai-btn');
+            const viewReportBtn = document.getElementById('view-report-btn');
+            
+            const modals = {
+                loading: document.getElementById('loading-modal'),
+                aiResult: document.getElementById('ai-result-modal'),
+                levelUp: document.getElementById('level-up-modal'),
+                aiMenu: document.getElementById('ai-menu-modal'),
+                goalPlanner: document.getElementById('goal-planner-modal'),
+                routineBuilder: document.getElementById('routine-builder-modal'),
+                ideaConverter: document.getElementById('idea-converter-modal'),
+                decisionHelper: document.getElementById('decision-helper-modal'),
+                mindfulMoment: document.getElementById('mindful-moment-modal'),
+                energy: document.getElementById('energy-modal'),
+                report: document.getElementById('report-modal')
+            };
+
+            const aiModalTitle = document.getElementById('ai-modal-title');
+            const aiModalContent = document.getElementById('ai-modal-content');
+            const levelUpContent = document.getElementById('level-up-content');
+            const goalInput = document.getElementById('goal-input');
+            const routineInput = document.getElementById('routine-input');
+            const ideaInput = document.getElementById('idea-input');
+            const decisionTask1 = document.getElementById('decision-task-1');
+            const decisionTask2 = document.getElementById('decision-task-2');
+            const breathText = document.getElementById('breath-text');
+
+            let tasks = [];
+            let gamificationState = { xp: 0, level: 1, streak: 0, longestStreak: 0, lastCompletionDate: null };
+            let breathInterval;
+            
+            const API_KEY = "";
+            const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`;
+
+            const showModal = (modal) => { modal.classList.remove('hidden'); setTimeout(() => modal.classList.remove('opacity-0'), 10); };
+            const hideModal = (modal) => { modal.classList.add('opacity-0'); setTimeout(() => modal.classList.add('hidden'), 300); };
+            
+            const loadState = () => {
+                tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+                gamificationState = JSON.parse(localStorage.getItem('gamification')) || { xp: 0, level: 1, streak: 0, longestStreak: 0, lastCompletionDate: null };
+            };
+            const saveState = () => {
+                localStorage.setItem('tasks', JSON.stringify(tasks));
+                localStorage.setItem('gamification', JSON.stringify(gamificationState));
+            };
+
+            const callGemini = async (prompt) => {
+                showModal(modals.loading);
+                try {
+                    const payload = { contents: [{ role: "user", parts: [{ text: prompt }] }] };
+                    const response = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                    if (!response.ok) throw new Error(`API Error: ${response.statusText}`);
+                    const result = await response.json();
+                    if (result.candidates?.[0]?.content?.parts?.[0]?.text) {
+                        addXp(5);
+                        return result.candidates[0].content.parts[0].text;
+                    }
+                    return "Sorry, the AI couldn't think of a response.";
+                } catch (error) {
+                    console.error("Gemini API call failed:", error);
+                    return "An error occurred while contacting the AI. Please try again.";
+                } finally {
+                    hideModal(modals.loading);
+                }
+            };
+
+            const getXpForNextLevel = (level) => 100 + (level - 1) * 50;
+            const renderGamification = () => {
+                const { level, xp, streak } = gamificationState;
+                const xpNeeded = getXpForNextLevel(level);
+                document.getElementById('level-display').textContent = `Level ${level}`;
+                document.getElementById('streak-display').innerHTML = `🔥 ${streak}`;
+                document.getElementById('xp-display').textContent = `${xp} / ${xpNeeded} XP`;
+                document.getElementById('xp-bar').style.width = `${(xp / xpNeeded) * 100}%`;
+            };
+            const addXp = (amount) => {
+                gamificationState.xp += amount;
+                const xpNeeded = getXpForNextLevel(gamificationState.level);
+                if (gamificationState.xp >= xpNeeded) {
+                    gamificationState.level++;
+                    gamificationState.xp -= xpNeeded;
+                    levelUpContent.textContent = `You've reached Level ${gamificationState.level}! Keep up the amazing work.`;
+                    showModal(modals.levelUp);
+                }
+                renderGamification();
+            };
+            const updateStreak = () => {
+                const today = new Date().toDateString();
+                if (gamificationState.lastCompletionDate !== today) {
+                    const yesterday = new Date();
+                    yesterday.setDate(yesterday.getDate() - 1);
+                    gamificationState.streak = gamificationState.lastCompletionDate === yesterday.toDateString() ? gamificationState.streak + 1 : 1;
+                    if (gamificationState.streak > gamificationState.longestStreak) {
+                        gamificationState.longestStreak = gamificationState.streak;
+                    }
+                    if (gamificationState.streak > 1) addXp(gamificationState.streak * 5);
+                    gamificationState.lastCompletionDate = today;
+                }
+            };
+
+            const renderTasks = () => {
+                taskListContainer.innerHTML = ''; 
+                const hasTasks = tasks.length > 0;
+                emptyState.classList.toggle('hidden', hasTasks);
+                tasks.forEach((task, index) => {
+                    const taskElement = createTaskElement(task);
+                    taskElement.style.animationDelay = `${index * 50}ms`;
+                    taskListContainer.appendChild(taskElement)
+                });
+            };
+
+            const createTaskElement = (task) => {
+                if (task.link) {
+                    const linkItem = document.createElement('a');
+                    linkItem.href = task.link;
+                    linkItem.target = "_blank";
+                    linkItem.className = 'task-link-item fade-in rounded-lg p-4 flex items-end relative';
+                    
+                    const bg = document.createElement('div');
+                    bg.className = 'thumbnail-bg';
+                    bg.style.backgroundImage = `url(${task.thumbnail})`;
+                    
+                    const overlay = document.createElement('div');
+                    overlay.className = 'thumbnail-overlay';
+
+                    const content = document.createElement('div');
+                    content.className = 'relative z-10 flex items-center gap-4 w-full';
+                    
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.checked = task.done;
+                    checkbox.className = 'h-5 w-5 rounded bg-black/30 border-white/20 text-indigo-500 focus:ring-indigo-500 cursor-pointer';
+                    checkbox.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        toggleTaskStatus(task.id);
+                    });
+
+                    const taskText = document.createElement('span');
+                    taskText.textContent = task.text;
+                    taskText.className = 'task-text text-white font-semibold';
+                     if (task.done) taskText.classList.add('task-text-done');
+
+                    content.append(checkbox, taskText);
+                    linkItem.append(bg, overlay, content);
+                    return linkItem;
+
+                } else {
+                    const taskItem = document.createElement('div');
+                    taskItem.className = 'task-item flex items-center justify-between p-4 rounded-lg fade-in';
+                    taskItem.dataset.id = task.id;
+                    const leftSide = document.createElement('div');
+                    leftSide.className = 'flex items-center gap-4';
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.checked = task.done;
+                    checkbox.className = 'h-5 w-5 rounded bg-black/30 border-white/20 text-indigo-500 focus:ring-indigo-500 cursor-pointer';
+                    checkbox.addEventListener('change', () => toggleTaskStatus(task.id));
+                    const taskText = document.createElement('span');
+                    taskText.textContent = task.text;
+                    taskText.className = 'task-text text-gray-200';
+                    if (task.done) taskText.classList.add('task-text-done');
+                    leftSide.append(checkbox, taskText);
+                    const rightSide = document.createElement('div');
+                    rightSide.className = 'flex items-center gap-2';
+                    const deleteButton = document.createElement('button');
+                    deleteButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" /></svg>`;
+                    deleteButton.className = 'action-btn text-gray-500 hover:text-red-500 transition-colors';
+                    deleteButton.title = "Delete Task";
+                    deleteButton.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        taskItem.style.transition = 'opacity 0.3s, transform 0.3s';
+                        taskItem.style.opacity = '0';
+                        taskItem.style.transform = 'translateX(-20px)';
+                        setTimeout(() => deleteTask(task.id), 300);
+                    });
+                    rightSide.appendChild(deleteButton);
+                    taskItem.append(leftSide, rightSide);
+                    return taskItem;
+                }
+            };
+
+            const getUrlData = (text) => {
+                try {
+                    const url = new URL(text);
+                    let thumbnail = `https://placehold.co/600x300/0d0f18/6366f1?text=${encodeURIComponent(url.hostname)}`;
+                    
+                    if (url.hostname.includes('youtube.com') || url.hostname.includes('youtu.be')) {
+                        let videoId;
+                        if (url.hostname.includes('youtu.be')) {
+                            videoId = url.pathname.slice(1);
+                        } else {
+                            videoId = url.searchParams.get('v');
+                        }
+                        if (videoId) {
+                            thumbnail = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+                        }
+                    }
+                    return { link: url.href, thumbnail, text: url.href };
+                } catch (_) {
+                    return { link: null, thumbnail: null, text: text };
+                }
+            }
+
+            const addTask = (text) => {
+                if (text.trim() === '') return;
+                const urlData = getUrlData(text.trim());
+                tasks.unshift({ 
+                    id: Date.now(), 
+                    text: urlData.text, 
+                    done: false, 
+                    completionDate: null,
+                    link: urlData.link,
+                    thumbnail: urlData.thumbnail
+                });
+                saveAndRender();
+            };
+            const deleteTask = (id) => { tasks = tasks.filter(task => task.id !== id); saveAndRender(); };
+            const toggleTaskStatus = (id) => {
+                const task = tasks.find(task => task.id === id);
+                if (task) {
+                    if (!task.done) { 
+                        addXp(10); 
+                        updateStreak();
+                        task.completionDate = new Date().toISOString();
+                    } else {
+                        task.completionDate = null;
+                    }
+                    task.done = !task.done;
+                }
+                saveAndRender();
+            };
+            const saveAndRender = () => { saveState(); renderTasks(); renderGamification(); };
+            const showAIResult = (title, content) => { aiModalTitle.textContent = title; aiModalContent.textContent = content; showModal(modals.aiResult); };
+
+            function toRoman(num) {
+                const roman = { M: 1000, CM: 900, D: 500, CD: 400, C: 100, XC: 90, L: 50, XL: 40, X: 10, IX: 9, V: 5, IV: 4, I: 1 };
+                let str = '';
+                for (let i of Object.keys(roman)) {
+                    let q = Math.floor(num / roman[i]);
+                    num -= q * roman[i];
+                    str += i.repeat(q);
+                }
+                return str;
+            }
+
+            const handleSmartAdd = async () => {
+                const goal = taskInput.value.trim();
+                if (!goal) { showAIResult("Input Required", "Please enter a goal in the main input box to break down."); return; }
+                const prompt = `Break down this goal into a comma-separated list of 3-5 smaller tasks: "${goal}"`;
+                const result = await callGemini(prompt);
+                if (result) {
+                    result.split(',').forEach(subtask => { if(subtask.trim()) addTask(subtask.trim()) });
+                    taskInput.value = '';
+                }
+            };
+            const handleSuggestTask = async () => {
+                const uncompleted = tasks.filter(t => !t.done).map(t => t.text).join('; ');
+                if (!uncompleted) { showAIResult("No Tasks", "Add some tasks first!"); return; }
+                const prompt = `Based on my to-do list, suggest one logical next task. Provide only the task text. List: "${uncompleted}"`;
+                const result = await callGemini(prompt);
+                if (result) { showAIResult("✨ AI Suggested Task", `How about this for a next task? \n\n"${result.trim()}"`); taskInput.value = result.trim(); }
+            };
+            const handlePlanGoal = async () => {
+                const goal = goalInput.value.trim();
+                if (!goal) { showAIResult("Input Required", "Please describe your goal."); return; }
+                hideModal(modals.goalPlanner);
+                const prompt = `You are an expert project planner. Break down the following high-level goal into a numbered list of actionable tasks. Goal: "${goal}"`;
+                const result = await callGemini(prompt);
+                if (result) {
+                    const subtasks = result.split('\n').map(s => s.trim()).filter(s => s.match(/^\d+\./));
+                    subtasks.forEach((subtask, index) => {
+                        const taskText = subtask.replace(/^\d+\.\s*/, '');
+                        if (taskText) {
+                            const romanNumeral = toRoman(index + 1);
+                            addTask(`${romanNumeral}. ${taskText}`);
+                        }
+                    });
+                    goalInput.value = '';
+                    showAIResult("✅ Goal Plan Created!", `Your plan for "${goal}" has been added with sequential steps.`);
+                }
+            };
+            const handleBuildRoutine = async () => {
+                const routine = routineInput.value.trim();
+                if (!routine) { showAIResult("Input Required", "Please describe the routine."); return; }
+                hideModal(modals.routineBuilder);
+                const prompt = `You are a life coach. Create a numbered list of actionable tasks for the following routine: "${routine}"`;
+                const result = await callGemini(prompt);
+                if (result) {
+                     const subtasks = result.split('\n').map(s => s.trim()).filter(s => s.match(/^\d+\./));
+                    subtasks.forEach((subtask, index) => {
+                        const taskText = subtask.replace(/^\d+\.\s*/, '');
+                        if (taskText) {
+                            const romanNumeral = toRoman(index + 1);
+                            addTask(`${romanNumeral}. ${taskText}`);
+                        }
+                    });
+                    routineInput.value = '';
+                    showAIResult("✅ Routine Built!", `Your new routine "${routine}" has been added with sequential steps.`);
+                }
+            };
+             const handleIdeaConverter = async () => {
+                const idea = ideaInput.value.trim();
+                if (!idea) { showAIResult("Input Required", "Please enter an idea to convert."); return; }
+                hideModal(modals.ideaConverter);
+                const prompt = `You are a creative assistant. Convert the following raw idea into a single, structured, actionable to-do list item. Idea: "${idea}"`;
+                const result = await callGemini(prompt);
+                if (result) {
+                    addTask(result.trim());
+                    ideaInput.value = '';
+                    showAIResult("✅ Idea Captured!", `Your idea has been turned into a new task.`);
+                }
+            };
+            const handleEnergyTask = async (energyLevel) => {
+                hideModal(modals.energy);
+                const uncompleted = tasks.filter(t => !t.done).map(t => t.text).join('; ');
+                if (!uncompleted) { showAIResult("No Tasks", "Add some tasks first!"); return; }
+                const prompt = `I have ${energyLevel} energy. Which single task from my list is most appropriate? Provide only the task text. List: "${uncompleted}"`;
+                const result = await callGemini(prompt);
+                if(result) { showAIResult(`⚡️ ${energyLevel} Energy Task`, `A great task for your energy level is:\n\n"${result.trim()}"`); }
+            };
+            const handleDecisionHelper = async () => {
+                const task1 = decisionTask1.value.trim();
+                const task2 = decisionTask2.value.trim();
+                if (!task1 || !task2) { showAIResult("Input Required", "Please enter both task options."); return; }
+                hideModal(modals.decisionHelper);
+                const prompt = `I'm stuck choosing between two tasks. Task 1: "${task1}". Task 2: "${task2}". Analyze pros and cons and recommend one. Format clearly.`;
+                const result = await callGemini(prompt);
+                if (result) { showAIResult("🤔 AI Decision Helper", result); }
+            };
+            const handleMindfulMoment = () => {
+                showModal(modals.mindfulMoment);
+                breathText.textContent = 'Breathe In...';
+                breathInterval = setInterval(() => {
+                    breathText.textContent = breathText.textContent === 'Breathe In...' ? 'Breathe Out...' : 'Breathe In...';
+                }, 4000);
+            };
+            const handlePrioritizeTasks = async () => {
+                const uncompleted = tasks.filter(t => !t.done).map(t => t.text).join('; ');
+                const prompt = `From these tasks, what are the top 3 priorities? Present as a numbered list. Tasks: "${uncompleted}"`;
+                const result = await callGemini(prompt);
+                if (result) showAIResult("✨ Top 3 Priorities", result);
+            };
+            const handleReviewProgress = async () => {
+                const completed = tasks.filter(t => t.done).map(t => t.text).join('; ');
+                const prompt = `Write a short, uplifting summary of these accomplishments: "${completed}"`;
+                const result = await callGemini(prompt);
+                if (result) showAIResult("✨ Your Progress Review", result);
+            };
+             const handleDailyCheckin = async () => {
+                const completedCount = tasks.filter(t => t.done).length;
+                const uncompletedCount = tasks.filter(t => !t.done).length;
+                const prompt = `You are a friendly and encouraging AI accountability partner. I'm doing my daily check-in. Today, I have completed ${completedCount} tasks. I still have ${uncompletedCount} tasks left to do. Please give me a short, motivational response based on my progress.`;
+                const result = await callGemini(prompt);
+                if (result) showAIResult("✨ Daily Check-in", result);
+            };
+            const handleViewReport = () => {
+                const oneWeekAgo = new Date();
+                oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+
+                const tasksThisWeek = tasks.filter(task => 
+                    task.done && task.completionDate && new Date(task.completionDate) > oneWeekAgo
+                ).length;
+
+                document.getElementById('report-tasks-week').textContent = tasksThisWeek;
+                document.getElementById('report-longest-streak').textContent = `${gamificationState.longestStreak || 0} days`;
+                document.getElementById('report-total-xp').textContent = gamificationState.xp + ((gamificationState.level - 1) * 100);
+                document.getElementById('ai-report-container').textContent = "Click 'Get AI Analysis' for personalized feedback.";
+                showModal(modals.report);
+            };
+            const handleAiAnalysis = async () => {
+                const reportContainer = document.getElementById('ai-report-container');
+                reportContainer.textContent = "Analyzing your progress...";
+                const stats = {
+                    tasksThisWeek: document.getElementById('report-tasks-week').textContent,
+                    longestStreak: document.getElementById('report-longest-streak').textContent,
+                    totalXp: document.getElementById('report-total-xp').textContent,
+                    uncompletedTasks: tasks.filter(t => !t.done).length
+                };
+                const prompt = `You are a productivity coach. Based on the following stats, provide a short, encouraging analysis and one actionable tip for improvement. Stats: ${JSON.stringify(stats)}`;
+                const result = await callGemini(prompt);
+                if (result) {
+                    reportContainer.textContent = result;
+                }
+            };
+
+            startAppBtn.addEventListener('click', () => {
+                welcomeScreen.style.transition = 'opacity 0.5s, transform 0.5s';
+                welcomeScreen.style.opacity = '0';
+                welcomeScreen.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    welcomeScreen.classList.add('hidden');
+                    mainAppScreen.classList.remove('hidden');
+                    mainAppScreen.classList.add('fade-in');
+                    loadState();
+                    saveAndRender();
+                }, 500);
+            });
+            taskForm.addEventListener('submit', (e) => { e.preventDefault(); addTask(taskInput.value); taskInput.value = ''; });
+            
+            askAiBtn.addEventListener('click', () => showModal(modals.aiMenu));
+            viewReportBtn.addEventListener('click', handleViewReport);
+            
+            modals.aiMenu.addEventListener('click', (e) => {
+                const button = e.target.closest('.ai-menu-btn');
+                if (!button) return;
+                hideModal(modals.aiMenu);
+                const action = button.dataset.action;
+                const actions = {
+                    'smart-add': handleSmartAdd,
+                    'plan-goal': () => showModal(modals.goalPlanner),
+                    'build-routine': () => showModal(modals.routineBuilder),
+                    'capture-idea': () => showModal(modals.ideaConverter),
+                    'suggest': handleSuggestTask,
+                    'prioritize': handlePrioritizeTasks,
+                    'review': handleReviewProgress,
+                    'energy': () => showModal(modals.energy),
+                    'decide': () => showModal(modals.decisionHelper),
+                    'mindful': handleMindfulMoment,
+                    'check-in': handleDailyCheckin
+                };
+                if (actions[action]) actions[action]();
+            });
+
+            modals.energy.addEventListener('click', (e) => {
+                const button = e.target.closest('.energy-btn');
+                if(button) { hideModal(modals.energy); handleEnergyTask(button.dataset.energy); }
+            });
+
+            document.getElementById('close-ai-menu-btn').addEventListener('click', () => hideModal(modals.aiMenu));
+            document.getElementById('close-ai-modal-btn').addEventListener('click', () => hideModal(modals.aiResult));
+            document.getElementById('close-level-up-modal-btn').addEventListener('click', () => hideModal(modals.levelUp));
+            document.getElementById('close-goal-modal-btn').addEventListener('click', () => hideModal(modals.goalPlanner));
+            document.getElementById('submit-goal-btn').addEventListener('click', handlePlanGoal);
+            document.getElementById('close-routine-modal-btn').addEventListener('click', () => hideModal(modals.routineBuilder));
+            document.getElementById('submit-routine-btn').addEventListener('click', handleBuildRoutine);
+            document.getElementById('close-idea-modal-btn').addEventListener('click', () => hideModal(modals.ideaConverter));
+            document.getElementById('submit-idea-btn').addEventListener('click', handleIdeaConverter);
+            document.getElementById('close-decision-modal-btn').addEventListener('click', () => hideModal(modals.decisionHelper));
+            document.getElementById('submit-decision-btn').addEventListener('click', handleDecisionHelper);
+            document.getElementById('close-mindful-modal-btn').addEventListener('click', () => { clearInterval(breathInterval); hideModal(modals.mindfulMoment); });
+            document.getElementById('close-report-modal-btn').addEventListener('click', () => hideModal(modals.report));
+            document.getElementById('get-ai-analysis-btn').addEventListener('click', handleAiAnalysis);
+        });
+    </script>
+
+</body>
+</html>
