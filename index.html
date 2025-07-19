@@ -4,16 +4,43 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AetherList</title>
+    <link rel="icon" type="image/png" href="https://i.ibb.co/9gXyD0b/AL-1.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --bg-color: #0d0f18;
+            --text-color: #e5e7eb;
+            --text-color-muted: #9ca3af;
+            --container-bg: rgba(17, 24, 39, 0.6);
+            --card-bg: rgba(255, 255, 255, 0.05);
+            --border-color: rgba(255, 255, 255, 0.1);
+            --input-bg: rgba(0, 0, 0, 0.3);
+            --primary-btn-bg: #ffffff;
+            --primary-btn-text: #000000;
+            --secondary-btn-bg: rgba(255, 255, 255, 0.05);
+        }
+        html.light {
+            --bg-color: #f9fafb;
+            --text-color: #1f2937;
+            --text-color-muted: #6b7280;
+            --container-bg: rgba(255, 255, 255, 0.6);
+            --card-bg: rgba(0, 0, 0, 0.03);
+            --border-color: rgba(0, 0, 0, 0.1);
+            --input-bg: rgba(255, 255, 255, 0.8);
+            --primary-btn-bg: #000000;
+            --primary-btn-text: #ffffff;
+            --secondary-btn-bg: rgba(0, 0, 0, 0.05);
+        }
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #0d0f18;
-            background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.05) 1px, transparent 0);
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            background-image: radial-gradient(circle at 1px 1px, rgba(128,128,128,0.1) 1px, transparent 0);
             background-size: 25px 25px;
+            transition: background-color 0.3s;
         }
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
@@ -27,124 +54,90 @@
             0%, 100% { transform: scale(0.9); box-shadow: 0 0 15px rgba(79, 70, 229, 0.4); }
             50% { transform: scale(1); box-shadow: 0 0 30px rgba(79, 70, 229, 0.7); }
         }
-        .fade-in {
-            animation: fadeIn 0.5s ease-out forwards;
-        }
-        .modal-content {
-            animation: modal-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
+        .fade-in { animation: fadeIn 0.5s ease-out forwards; }
+        .modal-content { animation: modal-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         .main-container {
-            background: rgba(17, 24, 39, 0.6);
+            background: var(--container-bg);
             backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 0 80px rgba(79, 70, 229, 0.15);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 0 80px rgba(0, 0, 0, 0.15);
         }
+        html.dark .main-container { box-shadow: 0 0 80px rgba(79, 70, 229, 0.15); }
         .task-item, .task-link-item {
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--border-color);
             transition: background-color 0.3s, transform 0.2s;
         }
         .task-item:hover, .task-link-item:hover {
-            background-color: rgba(255, 255, 255, 0.05);
+            background-color: var(--card-bg);
             transform: translateY(-2px);
         }
-        .task-text-done {
-            text-decoration: line-through;
-            color: #6b7280;
-        }
+        .task-text-done { text-decoration: line-through; color: var(--text-color-muted); }
         .xp-bar-inner {
             background: linear-gradient(90deg, #fde047, #fbbf24);
             transition: width 0.5s cubic-bezier(0.22, 1, 0.36, 1);
         }
-        .glowing-border-button {
-            position: relative;
-            z-index: 1;
-            overflow: hidden;
-        }
-        .glowing-border-button::before {
-            content: '';
-            position: absolute;
-            top: 0; right: 0; bottom: 0; left: 0;
-            z-index: -1;
-            margin: -1px;
-            border-radius: inherit;
-            background: linear-gradient(90deg, #818cf8, #c084fc, #f472b6);
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-        .glowing-border-button:hover::before {
-            opacity: 1;
-        }
         .breathing-circle {
-            width: 150px;
-            height: 150px;
+            width: 150px; height: 150px;
             background: radial-gradient(circle, #4f46e5, #312e81);
             border-radius: 50%;
             animation: breathe 6s ease-in-out infinite;
         }
-        .task-link-item {
-            display: block;
-            position: relative;
-            overflow: hidden;
-            min-height: 120px;
-        }
-        .thumbnail-bg {
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background-size: cover;
-            background-position: center;
-            transition: transform 0.3s ease-out;
-        }
-        .task-link-item:hover .thumbnail-bg {
-            transform: scale(1.05);
-        }
-        .thumbnail-overlay {
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: linear-gradient(to top, rgba(13, 15, 24, 0.8), rgba(13, 15, 24, 0.4));
-        }
+        .task-link-item { display: block; position: relative; overflow: hidden; min-height: 120px; }
+        .thumbnail-bg { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-size: cover; background-position: center; transition: transform 0.3s ease-out; }
+        .task-link-item:hover .thumbnail-bg { transform: scale(1.05); }
+        .thumbnail-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(to top, rgba(13, 15, 24, 0.8), rgba(13, 15, 24, 0.4)); }
     </style>
 </head>
-<body class="text-gray-200 flex items-center justify-center min-h-screen p-4">
+<body class="flex items-center justify-center min-h-screen p-4">
 
     <div id="welcome-screen" class="w-full max-w-3xl mx-auto main-container rounded-2xl p-4 sm:p-8 fade-in">
-        <h1 class="text-2xl sm:text-3xl font-bold text-center text-white mb-4">Welcome to AetherList</h1>
+        <h1 class="text-2xl sm:text-3xl font-bold text-center mb-4">Welcome to AetherList</h1>
         <p class="text-center text-gray-400 mb-8">This isn't just a to-do list; it's your personal productivity partner.</p>
         <div class="bg-black/20 p-4 sm:p-6 rounded-lg max-h-[50vh] overflow-y-auto border border-white/10">
             <h2 class="text-xl font-bold text-purple-400 mb-3">Features:</h2>
-            <ul class="space-y-4 text-gray-300">
+            <ul class="space-y-4">
                 <li><strong>Visual Tasks:</strong> Paste a link to automatically create a task with a thumbnail preview.</li>
                 <li><strong>Gamification:</strong> Level up by earning XP for completing tasks and using AI. Maintain daily streaks for bonus XP!</li>
                 <li><strong>The AI Assistant (✨ Ask AI):</strong> Your central command for all smart features.</li>
                 <li><strong>Productivity Reports:</strong> Get weekly summaries and AI-powered analysis of your performance.</li>
             </ul>
         </div>
-        <button id="start-app-btn" class="w-full mt-8 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-lg transition-all transform hover:scale-105 glowing-border-button">
+        <button id="start-app-btn" class="w-full mt-8 bg-[var(--primary-btn-bg)] text-[var(--primary-btn-text)] font-bold py-3 px-6 rounded-lg transition-all transform hover:scale-105">
             Start Organizing Your Universe
         </button>
     </div>
 
     <div id="main-app-screen" class="w-full max-w-2xl mx-auto main-container rounded-2xl hidden">
-        <div class="p-4 sm:p-6 md:p-8">
-            <header class="text-center mb-8">
-                <h1 class="text-2xl sm:text-3xl md:text-4xl font-bold text-white tracking-tight">AetherList</h1>
-                <div id="gamification-stats" class="mt-6 text-left">
-                    <div class="flex justify-between items-center mb-2">
-                        <span id="level-display" class="font-bold text-lg text-yellow-400">Level 1</span>
-                        <span id="streak-display" class="font-semibold text-orange-400 flex items-center gap-1">🔥 0</span>
-                    </div>
-                    <div class="w-full bg-black/20 rounded-full h-2.5 border border-white/10"><div id="xp-bar" class="xp-bar-inner h-full rounded-full" style="width: 0%"></div></div>
-                    <div id="xp-display" class="text-right text-sm text-gray-400 mt-1">0 / 100 XP</div>
+        <nav class="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-2xl p-4 flex justify-between items-center z-20">
+            <div class="flex items-center gap-2">
+                <img src="https://i.ibb.co/9gXyD0b/AL-1.png" alt="AetherList Logo" class="h-8 w-8" id="logo-dark">
+                <img src="https://i.ibb.co/bF0JTSx/AL-black.png" alt="AetherList Logo" class="h-8 w-8 hidden" id="logo-light">
+                <span class="font-bold text-lg">AetherList</span>
+            </div>
+            <button id="theme-toggle-btn" class="p-2 rounded-full bg-[var(--secondary-btn-bg)] hover:bg-white/10 border border-white/10 transition-colors">
+                <svg id="theme-icon-sun" class="h-5 w-5 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                <svg id="theme-icon-moon" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+            </button>
+        </nav>
+
+        <div class="p-4 sm:p-6 md:p-8 pt-24">
+            <div id="gamification-stats" class="mb-8 text-left">
+                <div class="flex justify-between items-center mb-2">
+                    <span id="level-display" class="font-bold text-lg text-yellow-400">Level 1</span>
+                    <span id="streak-display" class="font-semibold text-orange-400 flex items-center gap-1">🔥 0</span>
                 </div>
-            </header>
+                <div class="w-full bg-black/20 rounded-full h-2.5 border border-white/10"><div id="xp-bar" class="xp-bar-inner h-full rounded-full" style="width: 0%"></div></div>
+                <div id="xp-display" class="text-right text-sm text-gray-400 mt-1">0 / 100 XP</div>
+            </div>
 
             <form id="task-form" class="flex flex-col sm:flex-row gap-2 mb-6">
-                <input type="text" id="task-input" placeholder="Add a new task or paste a link..." class="flex-grow min-w-0 bg-black/30 border border-white/10 rounded-lg px-4 py-3 text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
-                <button type="submit" id="add-btn" class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-6 py-3 rounded-lg transition-all transform hover:scale-105">Add</button>
+                <input type="text" id="task-input" placeholder="Add a new task or paste a link..." class="flex-grow min-w-0 bg-[var(--input-bg)] border border-[var(--border-color)] rounded-lg px-4 py-3 placeholder-[var(--text-color-muted)] focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+                <button type="submit" id="add-btn" class="w-full sm:w-auto bg-[var(--primary-btn-bg)] text-[var(--primary-btn-text)] font-semibold px-6 py-3 rounded-lg transition-all transform hover:scale-105">Add</button>
             </form>
 
             <div id="task-list-container" class="space-y-2 max-h-[40vh] overflow-y-auto pr-2"></div>
             
-            <div id="empty-state" class="text-center py-10 px-4 border-2 border-dashed border-white/10 rounded-lg mt-8 hidden">
+            <div id="empty-state" class="text-center py-10 px-4 border-2 border-dashed border-[var(--border-color)] rounded-lg mt-8 hidden">
                  <svg class="mx-auto h-12 w-12 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                 <h3 class="mt-2 text-lg font-medium text-gray-400">All tasks completed!</h3>
                 <p class="mt-1 text-sm text-gray-500">Add a new task to get started.</p>
@@ -152,22 +145,22 @@
 
             <div id="central-ai-container" class="mt-8 flex flex-col sm:flex-row justify-center gap-4">
                  <button id="ask-ai-btn" class="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold px-6 py-3 sm:px-8 sm:py-4 rounded-lg transition-all transform hover:scale-105 shadow-lg shadow-purple-500/20">Ask AI ✨</button>
-                 <button id="view-report-btn" class="w-full sm:w-auto bg-white/5 hover:bg-white/10 text-white font-semibold px-5 py-3 sm:px-6 rounded-lg border border-white/10 transition-all transform hover:scale-105">View Report</button>
+                 <button id="view-report-btn" class="w-full sm:w-auto bg-[var(--secondary-btn-bg)] hover:bg-white/10 font-semibold px-5 py-3 sm:px-6 rounded-lg border border-[var(--border-color)] transition-all transform hover:scale-105">View Report</button>
             </div>
         </div>
     </div>
 
-    <div id="loading-modal" class="modal-backdrop fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center hidden z-50 opacity-0 transition-opacity duration-300"><div class="text-center"><div class="loader"></div><p class="text-white mt-4 text-lg">AI is thinking...</p></div></div>
-    <div id="ai-result-modal" class="modal-backdrop fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center hidden z-50 opacity-0 p-4 transition-opacity duration-300"><div class="modal-content main-container rounded-xl w-full max-w-md p-6 text-center"><h3 id="ai-modal-title" class="text-xl font-bold text-white mb-4"></h3><p id="ai-modal-content" class="text-gray-300 mb-6 text-left"></p><button id="close-ai-modal-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-6 py-2 rounded-lg">Close</button></div></div>
-    <div id="level-up-modal" class="modal-backdrop fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center hidden z-50 opacity-0 p-4 transition-opacity duration-300"><div class="modal-content main-container rounded-xl w-full max-w-md p-6 text-center border-yellow-400/50"><h3 class="text-2xl font-bold text-yellow-400 mb-4">🎉 LEVEL UP! 🎉</h3><p id="level-up-content" class="text-gray-300 mb-6 text-lg"></p><button id="close-level-up-modal-btn" class="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold px-6 py-2 rounded-lg">Awesome!</button></div></div>
-    <div id="ai-menu-modal" class="modal-backdrop fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center hidden z-50 opacity-0 p-4 transition-opacity duration-300"><div class="modal-content main-container rounded-xl w-full max-w-lg p-6"><h3 class="text-xl font-bold text-white mb-6 text-center">AI Assistant</h3><div class="grid grid-cols-1 sm:grid-cols-2 gap-3"><button data-action="check-in" class="ai-menu-btn text-left w-full p-4 bg-black/20 hover:bg-white/10 rounded-lg transition-colors border border-white/10"><strong>Daily Check-in</strong><span class="block text-sm text-gray-400">Talk to your AI partner.</span></button><button data-action="capture-idea" class="ai-menu-btn text-left w-full p-4 bg-black/20 hover:bg-white/10 rounded-lg transition-colors border border-white/10"><strong>Capture an Idea</strong><span class="block text-sm text-gray-400">Turn a thought into a task.</span></button><button data-action="plan-goal" class="ai-menu-btn text-left w-full p-4 bg-black/20 hover:bg-white/10 rounded-lg transition-colors border border-white/10"><strong>Plan a New Goal</strong><span class="block text-sm text-gray-400">Break down a big ambition.</span></button><button data-action="build-routine" class="ai-menu-btn text-left w-full p-4 bg-black/20 hover:bg-white/10 rounded-lg transition-colors border border-white/10"><strong>Build a Routine</strong><span class="block text-sm text-gray-400">Generate a new habit.</span></button><button data-action="prioritize" class="ai-menu-btn text-left w-full p-4 bg-black/20 hover:bg-white/10 rounded-lg transition-colors border border-white/10"><strong>Prioritize My Tasks</strong><span class="block text-sm text-gray-400">Find your top 3.</span></button><button data-action="energy" class="ai-menu-btn text-left w-full p-4 bg-black/20 hover:bg-white/10 rounded-lg transition-colors border border-white/10"><strong>Suggest by Energy</strong><span class="block text-sm text-gray-400">Match task to your vibe.</span></button><button data-action="review" class="ai-menu-btn text-left w-full p-4 bg-black/20 hover:bg-white/10 rounded-lg transition-colors border border-white/10"><strong>Review My Progress</strong><span class="block text-sm text-gray-400">Celebrate your wins.</span></button><button data-action="decide" class="ai-menu-btn text-left w-full p-4 bg-black/20 hover:bg-white/10 rounded-lg transition-colors border border-white/10"><strong>Help Me Decide</strong><span class="block text-sm text-gray-400">Choose between two tasks.</span></button><button data-action="mindful" class="ai-menu-btn text-left w-full p-4 bg-black/20 hover:bg-white/10 rounded-lg transition-colors border border-white/10"><strong>Mindful Moment</strong><span class="block text-sm text-gray-400">Take a quick break.</span></button></div><button id="close-ai-menu-btn" class="mt-6 w-full bg-white/5 hover:bg-white/10 text-white font-semibold py-2 rounded-lg border border-white/10">Cancel</button></div></div>
-    <div id="report-modal" class="modal-backdrop fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center hidden z-50 opacity-0 p-4 transition-opacity duration-300"><div class="modal-content main-container rounded-xl w-full max-w-2xl p-6"><h3 class="text-2xl font-bold text-white mb-6 text-center">Your Productivity Report</h3><div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 text-center"><div class="bg-black/20 p-4 rounded-lg border border-white/10"><p class="text-sm text-gray-400">Tasks This Week</p><p id="report-tasks-week" class="text-2xl font-bold text-green-400">0</p></div><div class="bg-black/20 p-4 rounded-lg border border-white/10"><p class="text-sm text-gray-400">Longest Streak</p><p id="report-longest-streak" class="text-2xl font-bold text-orange-400">0 days</p></div><div class="bg-black/20 p-4 rounded-lg border border-white/10"><p class="text-sm text-gray-400">Total XP Gained</p><p id="report-total-xp" class="text-2xl font-bold text-yellow-400">0</p></div></div><div id="ai-report-container" class="bg-black/20 p-4 rounded-lg border border-white/10 min-h-[100px]"></div><div class="flex justify-end gap-3 mt-6"><button id="close-report-modal-btn" class="bg-white/5 hover:bg-white/10 px-4 py-2 rounded-lg border border-white/10">Close</button><button id="get-ai-analysis-btn" class="bg-teal-600 hover:bg-teal-700 px-4 py-2 rounded-lg">Get AI Analysis</button></div></div></div>
-    <div id="goal-planner-modal" class="modal-backdrop fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center hidden z-50 opacity-0 p-4 transition-opacity duration-300"><div class="modal-content main-container rounded-xl w-full max-w-md p-6"><h3 class="text-xl font-bold text-white mb-4">🎯 AI Goal Planner</h3><p class="text-gray-400 mb-4">Describe a large goal, and the AI will create a step-by-step plan for you.</p><textarea id="goal-input" class="w-full bg-black/30 border border-white/10 rounded-lg p-3 h-24 focus:ring-2 focus:ring-purple-500 focus:outline-none" placeholder="e.g., Launch a successful YouTube channel about cooking..."></textarea><div class="flex justify-end gap-3 mt-4"><button id="close-goal-modal-btn" class="bg-white/5 hover:bg-white/10 px-4 py-2 rounded-lg border border-white/10">Cancel</button><button id="submit-goal-btn" class="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg">Create Plan</button></div></div></div>
-    <div id="routine-builder-modal" class="modal-backdrop fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center hidden z-50 opacity-0 p-4 transition-opacity duration-300"><div class="modal-content main-container rounded-xl w-full max-w-md p-6"><h3 class="text-xl font-bold text-white mb-4">🛠️ AI Routine Builder</h3><p class="text-gray-400 mb-4">Describe the routine you want to build.</p><textarea id="routine-input" class="w-full bg-black/30 border border-white/10 rounded-lg p-3 h-24 focus:ring-2 focus:ring-pink-500 focus:outline-none" placeholder="e.g., A productive 30-minute morning routine..."></textarea><div class="flex justify-end gap-3 mt-4"><button id="close-routine-modal-btn" class="bg-white/5 hover:bg-white/10 px-4 py-2 rounded-lg border border-white/10">Cancel</button><button id="submit-routine-btn" class="bg-pink-600 hover:bg-pink-700 px-4 py-2 rounded-lg">Build Routine</button></div></div></div>
-    <div id="idea-converter-modal" class="modal-backdrop fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center hidden z-50 opacity-0 p-4 transition-opacity duration-300"><div class="modal-content main-container rounded-xl w-full max-w-md p-6"><h3 class="text-xl font-bold text-white mb-4">💡 Idea-to-Task Converter</h3><p class="text-gray-400 mb-4">Drop a random idea, and the AI will turn it into an actionable task.</p><textarea id="idea-input" class="w-full bg-black/30 border border-white/10 rounded-lg p-3 h-24 focus:ring-2 focus:ring-yellow-500 focus:outline-none" placeholder="e.g., a sci-fi story about time-traveling librarians..."></textarea><div class="flex justify-end gap-3 mt-4"><button id="close-idea-modal-btn" class="bg-white/5 hover:bg-white/10 px-4 py-2 rounded-lg border border-white/10">Cancel</button><button id="submit-idea-btn" class="bg-yellow-600 hover:bg-yellow-700 px-4 py-2 rounded-lg">Convert Idea</button></div></div></div>
-    <div id="decision-helper-modal" class="modal-backdrop fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center hidden z-50 opacity-0 p-4 transition-opacity duration-300"><div class="modal-content main-container rounded-xl w-full max-w-md p-6"><h3 class="text-xl font-bold text-white mb-4">🤔 AI Decision Helper</h3><p class="text-gray-400 mb-4">Stuck between two tasks? Let the AI help you choose.</p><input id="decision-task-1" class="w-full bg-black/30 border border-white/10 rounded-lg p-3 mb-3 focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="Task Option 1..."><input id="decision-task-2" class="w-full bg-black/30 border border-white/10 rounded-lg p-3 focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="Task Option 2..."><div class="flex justify-end gap-3 mt-4"><button id="close-decision-modal-btn" class="bg-white/5 hover:bg-white/10 px-4 py-2 rounded-lg border border-white/10">Cancel</button><button id="submit-decision-btn" class="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg">Help Me Decide</button></div></div></div>
-    <div id="mindful-moment-modal" class="modal-backdrop fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center hidden z-50 opacity-0 p-4 transition-opacity duration-300"><div class="modal-content main-container rounded-xl w-full max-w-md p-8 text-center"><h3 class="text-xl font-bold text-white mb-6">🧘 Mindful Moment</h3><div class="flex justify-center items-center mb-6"><div class="breathing-circle"><span id="breath-text" class="text-white font-bold text-lg">Breathe In...</span></div></div><button id="close-mindful-modal-btn" class="bg-sky-600 hover:bg-sky-700 text-white font-semibold px-6 py-2 rounded-lg">I'm Ready</button></div></div>
-    <div id="energy-modal" class="modal-backdrop fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center hidden z-50 opacity-0 p-4 transition-opacity duration-300"><div class="modal-content main-container rounded-xl w-full max-w-md p-6"><h3 class="text-xl font-bold text-white mb-6 text-center">How's your energy?</h3><div class="grid grid-cols-1 gap-3"><button data-energy="High" class="energy-btn text-left w-full p-4 bg-red-600/20 hover:bg-red-600/40 rounded-lg border border-white/10"><strong>High Energy 🚀</strong><span class="block text-sm text-red-200">Ready for a challenge.</span></button><button data-energy="Medium" class="energy-btn text-left w-full p-4 bg-yellow-600/20 hover:bg-yellow-600/40 rounded-lg border border-white/10"><strong>Medium Energy ⚡️</strong><span class="block text-sm text-yellow-200">Steady and focused.</span></button><button data-energy="Low" class="energy-btn text-left w-full p-4 bg-blue-600/20 hover:bg-blue-600/40 rounded-lg border border-white/10"><strong>Low Energy ☕️</strong><span class="block text-sm text-blue-200">Looking for something simple.</span></button></div></div></div>
+    <div id="loading-modal" class="modal-backdrop fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center hidden z-50 opacity-0 transition-opacity duration-300"><div class="text-center"><div class="loader"></div><p class="mt-4 text-lg">AI is thinking...</p></div></div>
+    <div id="ai-result-modal" class="modal-backdrop fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center hidden z-50 opacity-0 p-4 transition-opacity duration-300"><div class="modal-content main-container rounded-xl w-full max-w-md p-6 text-center"><h3 id="ai-modal-title" class="text-xl font-bold mb-4"></h3><p id="ai-modal-content" class="mb-6 text-left"></p><button id="close-ai-modal-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-6 py-2 rounded-lg">Close</button></div></div>
+    <div id="level-up-modal" class="modal-backdrop fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center hidden z-50 opacity-0 p-4 transition-opacity duration-300"><div class="modal-content main-container rounded-xl w-full max-w-md p-6 text-center border-yellow-400/50"><h3 class="text-2xl font-bold text-yellow-400 mb-4">🎉 LEVEL UP! 🎉</h3><p id="level-up-content" class="mb-6 text-lg"></p><button id="close-level-up-modal-btn" class="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold px-6 py-2 rounded-lg">Awesome!</button></div></div>
+    <div id="ai-menu-modal" class="modal-backdrop fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center hidden z-50 opacity-0 p-4 transition-opacity duration-300"><div class="modal-content main-container rounded-xl w-full max-w-lg p-6"><h3 class="text-xl font-bold mb-6 text-center">AI Assistant</h3><div class="grid grid-cols-1 sm:grid-cols-2 gap-3"><button data-action="check-in" class="ai-menu-btn text-left w-full p-4 bg-black/20 hover:bg-white/10 rounded-lg transition-colors border border-white/10"><strong>Daily Check-in</strong><span class="block text-sm text-gray-400">Talk to your AI partner.</span></button><button data-action="capture-idea" class="ai-menu-btn text-left w-full p-4 bg-black/20 hover:bg-white/10 rounded-lg transition-colors border border-white/10"><strong>Capture an Idea</strong><span class="block text-sm text-gray-400">Turn a thought into a task.</span></button><button data-action="plan-goal" class="ai-menu-btn text-left w-full p-4 bg-black/20 hover:bg-white/10 rounded-lg transition-colors border border-white/10"><strong>Plan a New Goal</strong><span class="block text-sm text-gray-400">Break down a big ambition.</span></button><button data-action="build-routine" class="ai-menu-btn text-left w-full p-4 bg-black/20 hover:bg-white/10 rounded-lg transition-colors border border-white/10"><strong>Build a Routine</strong><span class="block text-sm text-gray-400">Generate a new habit.</span></button><button data-action="prioritize" class="ai-menu-btn text-left w-full p-4 bg-black/20 hover:bg-white/10 rounded-lg transition-colors border border-white/10"><strong>Prioritize My Tasks</strong><span class="block text-sm text-gray-400">Find your top 3.</span></button><button data-action="energy" class="ai-menu-btn text-left w-full p-4 bg-black/20 hover:bg-white/10 rounded-lg transition-colors border border-white/10"><strong>Suggest by Energy</strong><span class="block text-sm text-gray-400">Match task to your vibe.</span></button><button data-action="review" class="ai-menu-btn text-left w-full p-4 bg-black/20 hover:bg-white/10 rounded-lg transition-colors border border-white/10"><strong>Review My Progress</strong><span class="block text-sm text-gray-400">Celebrate your wins.</span></button><button data-action="decide" class="ai-menu-btn text-left w-full p-4 bg-black/20 hover:bg-white/10 rounded-lg transition-colors border border-white/10"><strong>Help Me Decide</strong><span class="block text-sm text-gray-400">Choose between two tasks.</span></button><button data-action="mindful" class="ai-menu-btn text-left w-full p-4 bg-black/20 hover:bg-white/10 rounded-lg transition-colors border border-white/10"><strong>Mindful Moment</strong><span class="block text-sm text-gray-400">Take a quick break.</span></button></div><button id="close-ai-menu-btn" class="mt-6 w-full bg-white/5 hover:bg-white/10 font-semibold py-2 rounded-lg border border-white/10">Cancel</button></div></div>
+    <div id="report-modal" class="modal-backdrop fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center hidden z-50 opacity-0 p-4 transition-opacity duration-300"><div class="modal-content main-container rounded-xl w-full max-w-2xl p-6"><h3 class="text-2xl font-bold mb-6 text-center">Your Productivity Report</h3><div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 text-center"><div class="bg-black/20 p-4 rounded-lg border border-white/10"><p class="text-sm text-gray-400">Tasks This Week</p><p id="report-tasks-week" class="text-2xl font-bold text-green-400">0</p></div><div class="bg-black/20 p-4 rounded-lg border border-white/10"><p class="text-sm text-gray-400">Longest Streak</p><p id="report-longest-streak" class="text-2xl font-bold text-orange-400">0 days</p></div><div class="bg-black/20 p-4 rounded-lg border border-white/10"><p class="text-sm text-gray-400">Total XP Gained</p><p id="report-total-xp" class="text-2xl font-bold text-yellow-400">0</p></div></div><div id="ai-report-container" class="bg-black/20 p-4 rounded-lg border border-white/10 min-h-[100px]"></div><div class="flex justify-end gap-3 mt-6"><button id="close-report-modal-btn" class="bg-white/5 hover:bg-white/10 px-4 py-2 rounded-lg border border-white/10">Close</button><button id="get-ai-analysis-btn" class="bg-teal-600 hover:bg-teal-700 px-4 py-2 rounded-lg">Get AI Analysis</button></div></div></div>
+    <div id="goal-planner-modal" class="modal-backdrop fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center hidden z-50 opacity-0 p-4 transition-opacity duration-300"><div class="modal-content main-container rounded-xl w-full max-w-md p-6"><h3 class="text-xl font-bold mb-4">🎯 AI Goal Planner</h3><p class="text-gray-400 mb-4">Describe a large goal, and the AI will create a step-by-step plan for you.</p><textarea id="goal-input" class="w-full bg-black/30 border border-white/10 rounded-lg p-3 h-24 focus:ring-2 focus:ring-purple-500 focus:outline-none" placeholder="e.g., Launch a successful YouTube channel about cooking..."></textarea><div class="flex justify-end gap-3 mt-4"><button id="close-goal-modal-btn" class="bg-white/5 hover:bg-white/10 px-4 py-2 rounded-lg border border-white/10">Cancel</button><button id="submit-goal-btn" class="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg">Create Plan</button></div></div></div>
+    <div id="routine-builder-modal" class="modal-backdrop fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center hidden z-50 opacity-0 p-4 transition-opacity duration-300"><div class="modal-content main-container rounded-xl w-full max-w-md p-6"><h3 class="text-xl font-bold mb-4">🛠️ AI Routine Builder</h3><p class="text-gray-400 mb-4">Describe the routine you want to build.</p><textarea id="routine-input" class="w-full bg-black/30 border border-white/10 rounded-lg p-3 h-24 focus:ring-2 focus:ring-pink-500 focus:outline-none" placeholder="e.g., A productive 30-minute morning routine..."></textarea><div class="flex justify-end gap-3 mt-4"><button id="close-routine-modal-btn" class="bg-white/5 hover:bg-white/10 px-4 py-2 rounded-lg border border-white/10">Cancel</button><button id="submit-routine-btn" class="bg-pink-600 hover:bg-pink-700 px-4 py-2 rounded-lg">Build Routine</button></div></div></div>
+    <div id="idea-converter-modal" class="modal-backdrop fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center hidden z-50 opacity-0 p-4 transition-opacity duration-300"><div class="modal-content main-container rounded-xl w-full max-w-md p-6"><h3 class="text-xl font-bold mb-4">💡 Idea-to-Task Converter</h3><p class="text-gray-400 mb-4">Drop a random idea, and the AI will turn it into an actionable task.</p><textarea id="idea-input" class="w-full bg-black/30 border border-white/10 rounded-lg p-3 h-24 focus:ring-2 focus:ring-yellow-500 focus:outline-none" placeholder="e.g., a sci-fi story about time-traveling librarians..."></textarea><div class="flex justify-end gap-3 mt-4"><button id="close-idea-modal-btn" class="bg-white/5 hover:bg-white/10 px-4 py-2 rounded-lg border border-white/10">Cancel</button><button id="submit-idea-btn" class="bg-yellow-600 hover:bg-yellow-700 px-4 py-2 rounded-lg">Convert Idea</button></div></div></div>
+    <div id="decision-helper-modal" class="modal-backdrop fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center hidden z-50 opacity-0 p-4 transition-opacity duration-300"><div class="modal-content main-container rounded-xl w-full max-w-md p-6"><h3 class="text-xl font-bold mb-4">🤔 AI Decision Helper</h3><p class="text-gray-400 mb-4">Stuck between two tasks? Let the AI help you choose.</p><input id="decision-task-1" class="w-full bg-black/30 border border-white/10 rounded-lg p-3 mb-3 focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="Task Option 1..."><input id="decision-task-2" class="w-full bg-black/30 border border-white/10 rounded-lg p-3 focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="Task Option 2..."><div class="flex justify-end gap-3 mt-4"><button id="close-decision-modal-btn" class="bg-white/5 hover:bg-white/10 px-4 py-2 rounded-lg border border-white/10">Cancel</button><button id="submit-decision-btn" class="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg">Help Me Decide</button></div></div></div>
+    <div id="mindful-moment-modal" class="modal-backdrop fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center hidden z-50 opacity-0 p-4 transition-opacity duration-300"><div class="modal-content main-container rounded-xl w-full max-w-md p-8 text-center"><h3 class="text-xl font-bold mb-6">🧘 Mindful Moment</h3><div class="flex justify-center items-center mb-6"><div class="breathing-circle"><span id="breath-text" class="font-bold text-lg">Breathe In...</span></div></div><button id="close-mindful-modal-btn" class="bg-sky-600 hover:bg-sky-700 text-white font-semibold px-6 py-2 rounded-lg">I'm Ready</button></div></div>
+    <div id="energy-modal" class="modal-backdrop fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center hidden z-50 opacity-0 p-4 transition-opacity duration-300"><div class="modal-content main-container rounded-xl w-full max-w-md p-6"><h3 class="text-xl font-bold mb-6 text-center">How's your energy?</h3><div class="grid grid-cols-1 gap-3"><button data-energy="High" class="energy-btn text-left w-full p-4 bg-red-600/20 hover:bg-red-600/40 rounded-lg border border-white/10"><strong>High Energy 🚀</strong><span class="block text-sm text-red-200">Ready for a challenge.</span></button><button data-energy="Medium" class="energy-btn text-left w-full p-4 bg-yellow-600/20 hover:bg-yellow-600/40 rounded-lg border border-white/10"><strong>Medium Energy ⚡️</strong><span class="block text-sm text-yellow-200">Steady and focused.</span></button><button data-energy="Low" class="energy-btn text-left w-full p-4 bg-blue-600/20 hover:bg-blue-600/40 rounded-lg border border-white/10"><strong>Low Energy ☕️</strong><span class="block text-sm text-blue-200">Looking for something simple.</span></button></div></div></div>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -181,6 +174,11 @@
             const emptyState = document.getElementById('empty-state');
             const askAiBtn = document.getElementById('ask-ai-btn');
             const viewReportBtn = document.getElementById('view-report-btn');
+            const themeToggleBtn = document.getElementById('theme-toggle-btn');
+            const themeIconSun = document.getElementById('theme-icon-sun');
+            const themeIconMoon = document.getElementById('theme-icon-moon');
+            const logoDark = document.getElementById('logo-dark');
+            const logoLight = document.getElementById('logo-light');
             
             const modals = {
                 loading: document.getElementById('loading-modal'),
@@ -219,6 +217,8 @@
             const loadState = () => {
                 tasks = JSON.parse(localStorage.getItem('tasks')) || [];
                 gamificationState = JSON.parse(localStorage.getItem('gamification')) || { xp: 0, level: 1, streak: 0, longestStreak: 0, lastCompletionDate: null };
+                const theme = localStorage.getItem('theme') || 'dark';
+                setTheme(theme);
             };
             const saveState = () => {
                 localStorage.setItem('tasks', JSON.stringify(tasks));
@@ -338,7 +338,7 @@
                     checkbox.addEventListener('change', () => toggleTaskStatus(task.id));
                     const taskText = document.createElement('span');
                     taskText.textContent = task.text;
-                    taskText.className = 'task-text text-gray-200';
+                    taskText.className = 'task-text';
                     if (task.done) taskText.classList.add('task-text-done');
                     leftSide.append(checkbox, taskText);
                     const rightSide = document.createElement('div');
@@ -563,6 +563,24 @@
                     reportContainer.textContent = result;
                 }
             };
+             const setTheme = (theme) => {
+                localStorage.setItem('theme', theme);
+                if (theme === 'light') {
+                    document.documentElement.classList.add('light');
+                    document.documentElement.classList.remove('dark');
+                    themeIconSun.classList.remove('hidden');
+                    themeIconMoon.classList.add('hidden');
+                    logoDark.classList.add('hidden');
+                    logoLight.classList.remove('hidden');
+                } else {
+                    document.documentElement.classList.add('dark');
+                    document.documentElement.classList.remove('light');
+                    themeIconSun.classList.add('hidden');
+                    themeIconMoon.classList.remove('hidden');
+                    logoDark.classList.remove('hidden');
+                    logoLight.classList.add('hidden');
+                }
+            };
 
             startAppBtn.addEventListener('click', () => {
                 welcomeScreen.style.transition = 'opacity 0.5s, transform 0.5s';
@@ -581,6 +599,11 @@
             askAiBtn.addEventListener('click', () => showModal(modals.aiMenu));
             viewReportBtn.addEventListener('click', handleViewReport);
             
+            themeToggleBtn.addEventListener('click', () => {
+                const currentTheme = localStorage.getItem('theme') || 'dark';
+                setTheme(currentTheme === 'dark' ? 'light' : 'dark');
+            });
+
             modals.aiMenu.addEventListener('click', (e) => {
                 const button = e.target.closest('.ai-menu-btn');
                 if (!button) return;
@@ -621,6 +644,8 @@
             document.getElementById('close-mindful-modal-btn').addEventListener('click', () => { clearInterval(breathInterval); hideModal(modals.mindfulMoment); });
             document.getElementById('close-report-modal-btn').addEventListener('click', () => hideModal(modals.report));
             document.getElementById('get-ai-analysis-btn').addEventListener('click', handleAiAnalysis);
+
+            loadState();
         });
     </script>
 
