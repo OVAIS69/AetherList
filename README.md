@@ -55,13 +55,14 @@ Designed with a **dark glassmorphism UI** and smooth animations — inspired by 
 
 Clone this repo and run locally:  
 
-```bash
 git clone https://github.com/OVAIS69/AetherList.git
 cd AetherList
 open index.html
+---
 Or preview with VS Code Live Server.
 
-📂 Project Structure
+
+##📂 Project Structure
 bash
 Copy code
 AetherList/
@@ -135,6 +136,10 @@ Built with 💙 for productivity & creativity
 
 ✨ AetherList – Where Productivity Meets AI & Gamification.
 
+yaml
+Copy code
+
+---
 
 ⚡ This README makes **AetherList** look like a **professional, futuristic AI project**.  
 
